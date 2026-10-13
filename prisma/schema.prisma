@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_DIRECT")
+}
+
+// An order placed on the site. Prices are stored in cents (A$24.00 = 2400).
+model Order {
+  id            Int         @id @default(autoincrement())
+  status        String      @default("new") @db.VarChar(16) // new | paid | shipped | cancelled
+  name          String      @db.VarChar(120)
+  email         String      @db.VarChar(200)
+  phone         String?     @db.VarChar(40)
+  address1      String      @db.VarChar(200)
+  address2      String?     @db.VarChar(200)
+  suburb        String      @db.VarChar(100)
+  state         String      @db.VarChar(8)
+  postcode      String      @db.VarChar(8)
+  notes         String?     @db.VarChar(1000)
+  subtotalCents Int
+  shippingCents Int
+  totalCents    Int
+  createdAt     DateTime    @default(now())
+  items         OrderItem[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id         Int    @id @default(autoincrement())
+  orderId    Int
+  order      Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String @db.VarChar(64)
+  name       String @db.VarChar(120)
+  unitCents  Int
+  quantity   Int
+
+  @@index([orderId])
+}
+
+// Messages from the contact form.
+model Enquiry {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(120)
+  email     String   @db.VarChar(200)
+  message   String   @db.VarChar(2000)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
